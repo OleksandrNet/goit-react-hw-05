@@ -2,7 +2,9 @@ import Description from "../Description/Description";
 import Feedback from "../Feedback/Feedback";
 import Options from "../Options/Options";
 import Notification from "../Notification/Notification";
+import Theme from "../Theme/Theme";
 import { useEffect, useState } from "react";
+import css from "./App.module.css";
 
 const getInitialClicks = () => {
   const savedClicks = window.localStorage.getItem("my-clicks");
@@ -39,8 +41,10 @@ export default function App() {
     });
   };
 
+  const positive = Math.round((clicks.good / totalFeedback) * 100);
+
   return (
-    <div>
+    <div className={css.wrap}>
       <Description></Description>
       <Options
         updateFeedback={updateFeedback}
@@ -48,10 +52,15 @@ export default function App() {
         reset={reset}
       ></Options>
       {totalFeedback ? (
-        <Feedback totalFeedback={totalFeedback} clicks={clicks} />
+        <Feedback
+          positive={positive}
+          totalFeedback={totalFeedback}
+          clicks={clicks}
+        />
       ) : (
         <Notification />
       )}
+      <Theme />
     </div>
   );
 }

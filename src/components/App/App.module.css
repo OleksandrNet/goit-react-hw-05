@@ -4,3 +4,8 @@
   padding: 2rem;
   text-align: center;
 }
+
+.wrap {
+  margin: 30px;
+  transition: background-color 10s ease-in-out;
+}
