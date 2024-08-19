@@ -1,65 +1,54 @@
-import Description from "../Description/Description";
-import Feedback from "../Feedback/Feedback";
-import Options from "../Options/Options";
-import Notification from "../Notification/Notification";
+import ContactForm from "../ContactForm/ContactForm";
+import SearchBox from "../SearchBox/SearchBox";
+import ContactList from "../ContactList/ContactList";
 import Theme from "../Theme/Theme";
 import { useEffect, useState } from "react";
 import css from "./App.module.css";
+import { nanoid } from "nanoid";
 
-const getInitialClicks = () => {
-  const savedClicks = window.localStorage.getItem("my-clicks");
-  return savedClicks !== null
-    ? JSON.parse(savedClicks)
-    : {
-        good: 0,
-        neutral: 0,
-        bad: 0,
-      };
+const savedContact = () => {
+  const savedContacts = window.localStorage.getItem("my-contact");
+  return savedContacts !== null
+    ? JSON.parse(savedContacts)
+    : [
+        { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
+        { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
+        { id: "id-3", name: "Eden Clements", number: "645-17-79" },
+        { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
+      ];
 };
 
 export default function App() {
-  const [clicks, setClicks] = useState(getInitialClicks);
+  const [contacts, setContact] = useState(savedContact);
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    window.localStorage.setItem("my-clicks", JSON.stringify(clicks));
-  }, [clicks]);
+    window.localStorage.setItem("my-contact", JSON.stringify(contacts));
+  }, [contacts]);
 
-  const updateFeedback = (click) => {
-    setClicks({
-      ...clicks,
-      [click]: clicks[click] + 1,
+  const modeid = nanoid();
+
+  const addContact = (newContact) => {
+    setContact((contacts) => {
+      return [...contacts, newContact];
     });
   };
 
-  const totalFeedback = clicks.good + clicks.neutral + clicks.bad;
-
-  const reset = () => {
-    setClicks({
-      good: 0,
-      neutral: 0,
-      bad: 0,
+  const deletContact = (contactId) => {
+    setContact((contacts) => {
+      return contacts.filter((contact) => contact.id !== contactId);
     });
   };
 
-  const positive = Math.round((clicks.good / totalFeedback) * 100);
-
+  const filtreContact = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
   return (
-    <div className={css.wrap}>
-      <Description></Description>
-      <Options
-        updateFeedback={updateFeedback}
-        totalFeedback={totalFeedback}
-        reset={reset}
-      ></Options>
-      {totalFeedback ? (
-        <Feedback
-          positive={positive}
-          totalFeedback={totalFeedback}
-          clicks={clicks}
-        />
-      ) : (
-        <Notification />
-      )}
+    <div className={css.wrapp}>
+      <h1>Phonebook</h1>
+      <ContactForm addContact={addContact} id={modeid} />
+      <SearchBox filter={filter} setFilter={setFilter} />
+      <ContactList contacts={filtreContact} deletContact={deletContact} />
       <Theme />
     </div>
   );
