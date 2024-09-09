@@ -1,55 +1,91 @@
-import ContactForm from "../ContactForm/ContactForm";
-import SearchBox from "../SearchBox/SearchBox";
-import ContactList from "../ContactList/ContactList";
-import Theme from "../Theme/Theme";
-import { useEffect, useState } from "react";
-import css from "./App.module.css";
-import { nanoid } from "nanoid";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import SearchBar from "../SearchBar/SearchBar";
+import ImageGallery from "../ImageGallery/ImageGallery";
+import Loader from "../Loader/Loader";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
+import ImageModal from "../ImageModal/ImageModal";
 
-const savedContact = () => {
-  const savedContacts = window.localStorage.getItem("my-contact");
-  return savedContacts !== null
-    ? JSON.parse(savedContacts)
-    : [
-        { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
-        { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
-        { id: "id-3", name: "Eden Clements", number: "645-17-79" },
-        { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
-      ];
-};
+const API_KEY = "rPXybsNtFQfdvkZfn0BzdglpBayu8FcPFxIRI5dE_Iw";
+const BASE_URL = "https://api.unsplash.com/search/photos";
 
 export default function App() {
-  const [contacts, setContact] = useState(savedContact);
-  const [filter, setFilter] = useState("");
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [modalImage, setModalImage] = useState(null);
 
   useEffect(() => {
-    window.localStorage.setItem("my-contact", JSON.stringify(contacts));
-  }, [contacts]);
+    if (query === "") {
+      return;
+    }
 
-  const modeid = nanoid();
+    async function fetchImages() {
+      setLoading(true);
+      setError(null);
 
-  const addContact = (newContact) => {
-    setContact((contacts) => {
-      return [...contacts, newContact];
-    });
+      try {
+        const response = await axios.get(BASE_URL, {
+          params: {
+            query,
+            page,
+            per_page: 12,
+            client_id: API_KEY,
+          },
+        });
+
+        const newImages = response.data.results.map((image) => ({
+          id: image.id,
+          smallUrl: image.urls.small,
+          regularUrl: image.urls.regular,
+          description: image.alt_description,
+          author: image.user.name,
+          likes: image.likes,
+        }));
+
+        setImages((prevImages) =>
+          page === 1 ? newImages : [...prevImages, ...newImages]
+        );
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchImages();
+  }, [query, page]);
+
+  const handleSearch = (searchQuery) => {
+    setQuery(searchQuery);
+    setPage(1);
   };
 
-  const deletContact = (contactId) => {
-    setContact((contacts) => {
-      return contacts.filter((contact) => contact.id !== contactId);
-    });
+  const loadMoreImages = () => {
+    setPage((prevPage) => prevPage + 1);
   };
 
-  const filtreContact = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  const openModal = (image) => {
+    setModalImage(image);
+  };
+
+  const closeModal = () => {
+    setModalImage(null);
+  };
+
   return (
-    <div className={css.wrapp}>
-      <h1>Phonebook</h1>
-      <ContactForm addContact={addContact} id={modeid} />
-      <SearchBox filter={filter} setFilter={setFilter} />
-      <ContactList contacts={filtreContact} deletContact={deletContact} />
-      <Theme />
+    <div>
+      <SearchBar onSubmit={handleSearch} />
+      {error && <ErrorMessage />}
+      <ImageGallery images={images} onImageClick={openModal} />
+      {loading && <Loader />}
+      {images.length > 0 && !loading && (
+        <LoadMoreBtn onClick={loadMoreImages} />
+      )}
+      {modalImage && <ImageModal image={modalImage} onClose={closeModal} />}
     </div>
   );
 }
