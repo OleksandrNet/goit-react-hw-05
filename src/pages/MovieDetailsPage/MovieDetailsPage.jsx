@@ -1,6 +1,12 @@
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useParams, Link, useLocation, Outlet } from "react-router-dom";
-import { fetchMovieDetails } from "../../components/App/App";
+import {
+  useParams,
+  NavLink,
+  Link,
+  useLocation,
+  Outlet,
+} from "react-router-dom";
+import { fetchMovieDetails } from "../../movies-api";
 
 export default function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -30,8 +36,14 @@ export default function MovieDetailsPage() {
         alt={movie.title}
       />
       <p>{movie.overview}</p>
-      <Link to="cast">Cast</Link>
-      <Link to="reviews">Reviews</Link>
+      <ul>
+        <li>
+          <NavLink to="cast">Cast</NavLink>
+        </li>
+        <li>
+          <NavLink to="reviews">Reviews</NavLink>
+        </li>
+      </ul>
 
       <Suspense fallback={<div>LOADING SUBPAGE!!!</div>}>
         <Outlet />

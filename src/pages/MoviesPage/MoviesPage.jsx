@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { searchMovies } from "../../components/App/App";
+import { searchMovies } from "../../movies-api";
 import MovieList from "../../components/MovieList/MovieList";
 import { useLocation } from "react-router-dom";
 

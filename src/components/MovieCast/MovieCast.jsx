@@ -1,4 +1,4 @@
-import { fetchMovieCast } from "../App/App";
+import { fetchMovieCast } from "../../movies-api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 

@@ -1,15 +1,18 @@
-import { fetchMovieReviews } from "../App/App";
+import { fetchMovieReviews } from "../../movies-api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-export default function MovieCast() {
+export default function MovieReviews() {
   const { movieId } = useParams();
   const [reviews, setReviewst] = useState([]);
 
   useEffect(() => {
     fetchMovieReviews(movieId).then(setReviewst);
   }, [movieId]);
-  console.log(reviews);
+
+  if (reviews.length === 0) {
+    return <p>Коментарі відсутні</p>;
+  }
 
   return (
     <ul>
