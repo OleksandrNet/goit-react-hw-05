@@ -1,91 +1,74 @@
-import { useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navigation from "../Navigation/Navigation";
 import axios from "axios";
-import SearchBar from "../SearchBar/SearchBar";
-import ImageGallery from "../ImageGallery/ImageGallery";
-import Loader from "../Loader/Loader";
-import ErrorMessage from "../ErrorMessage/ErrorMessage";
-import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
-import ImageModal from "../ImageModal/ImageModal";
+import MovieCast from "../../components/MovieCast/MovieCast";
+import MovieReviews from "../../components/MovieReviews/MovieReviews";
 
-const API_KEY = "rPXybsNtFQfdvkZfn0BzdglpBayu8FcPFxIRI5dE_Iw";
-const BASE_URL = "https://api.unsplash.com/search/photos";
+const HomePage = lazy(() => import("../../pages/HomePage/HomePage"));
+const MoviesPage = lazy(() => import("../../pages/MoviesPage/MoviesPage"));
+const MovieDetailsPage = lazy(() =>
+  import("../../pages/MovieDetailsPage/MovieDetailsPage")
+);
+const NotFoundPage = lazy(() =>
+  import("../../pages/NotFoundPage/NotFoundPage")
+);
 
+const API_URL = "https://api.themoviedb.org/3";
+const API_TOKEN =
+  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxNGMzMzhiN2Q4ZDYwZjM0NDZiM2U0ZDA4NTNhNThjNyIsIm5iZiI6MTcyNzA4NjY3OC45MDEzNzksInN1YiI6IjY2ZjEzZWY1NmMzYjdhOGQ2NDhkYmFlMSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.hfKc3x7XtIULG7Wmi8va3yZnlm0E0HCrnci0Eolu9sY";
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    Authorization: API_TOKEN,
+  },
+});
+
+export const fetchTrendingMovies = async () => {
+  const response = await api.get("/trending/movie/day");
+  return response.data.results;
+};
+
+export const searchMovies = async (query) => {
+  const response = await api.get(`/search/movie`, {
+    params: {
+      query,
+      include_adult: false,
+    },
+  });
+  return response.data.results;
+};
+
+export const fetchMovieDetails = async (movieId) => {
+  const response = await api.get(`/movie/${movieId}`);
+  return response.data;
+};
+
+export const fetchMovieCast = async (movieId) => {
+  const response = await api.get(`/movie/${movieId}/credits`);
+  return response.data.cast;
+};
+
+export const fetchMovieReviews = async (movieId) => {
+  const response = await api.get(`/movie/${movieId}/reviews`);
+  return response.data.results;
+};
 export default function App() {
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [modalImage, setModalImage] = useState(null);
-
-  useEffect(() => {
-    if (query === "") {
-      return;
-    }
-
-    async function fetchImages() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await axios.get(BASE_URL, {
-          params: {
-            query,
-            page,
-            per_page: 12,
-            client_id: API_KEY,
-          },
-        });
-
-        const newImages = response.data.results.map((image) => ({
-          id: image.id,
-          smallUrl: image.urls.small,
-          regularUrl: image.urls.regular,
-          description: image.alt_description,
-          author: image.user.name,
-          likes: image.likes,
-        }));
-
-        setImages((prevImages) =>
-          page === 1 ? newImages : [...prevImages, ...newImages]
-        );
-      } catch (error) {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchImages();
-  }, [query, page]);
-
-  const handleSearch = (searchQuery) => {
-    setQuery(searchQuery);
-    setPage(1);
-  };
-
-  const loadMoreImages = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
-
-  const openModal = (image) => {
-    setModalImage(image);
-  };
-
-  const closeModal = () => {
-    setModalImage(null);
-  };
-
   return (
-    <div>
-      <SearchBar onSubmit={handleSearch} />
-      {error && <ErrorMessage />}
-      <ImageGallery images={images} onImageClick={openModal} />
-      {loading && <Loader />}
-      {images.length > 0 && !loading && (
-        <LoadMoreBtn onClick={loadMoreImages} />
-      )}
-      {modalImage && <ImageModal image={modalImage} onClose={closeModal} />}
-    </div>
+    <Router>
+      <Navigation />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/movies" element={<MoviesPage />} />
+          <Route path="/movies/:movieId/*" element={<MovieDetailsPage />}>
+            <Route path="cast" element={<MovieCast />} />
+            <Route path="reviews" element={<MovieReviews />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </Router>
   );
 }
