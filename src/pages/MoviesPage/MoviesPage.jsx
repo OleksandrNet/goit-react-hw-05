@@ -37,7 +37,7 @@ export default function MoviesPage() {
     const form = event.target;
     const searchQuery = form.elements.query.value.trim();
     if (searchQuery === "") {
-      return <p>000000</p>;
+      return;
     }
     setParams({ query: searchQuery });
   };
@@ -52,9 +52,9 @@ export default function MoviesPage() {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
-      {movies.length > 0 ? (
-        <MovieList state={location} movies={movies} />
-      ) : (
+      {movies.length > 0 && <MovieList state={location} movies={movies} />}
+
+      {movies.length === 0 && query && (
         <p>No movies found. Try searching for something else!</p>
       )}
     </div>
