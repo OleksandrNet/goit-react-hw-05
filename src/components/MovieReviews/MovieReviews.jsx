@@ -4,10 +4,10 @@ import { useParams } from "react-router-dom";
 
 export default function MovieReviews() {
   const { movieId } = useParams();
-  const [reviews, setReviewst] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
-    fetchMovieReviews(movieId).then(setReviewst);
+    fetchMovieReviews(movieId).then(setReviews);
   }, [movieId]);
 
   if (reviews.length === 0) {

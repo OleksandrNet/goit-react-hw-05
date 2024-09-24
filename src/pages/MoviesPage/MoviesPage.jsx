@@ -8,13 +8,23 @@ export default function MoviesPage() {
   const [movies, setMovies] = useState([]);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const query = params.get("query") ?? "";
 
   useEffect(() => {
     async function fetchData() {
-      const data = await searchMovies(query);
-      setMovies(data);
+      setLoading(true);
+      try {
+        const data = await searchMovies(query);
+        setMovies(data);
+        setError(null);
+      } catch (error) {
+        setError("Something went wrong. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchData();
@@ -22,22 +32,31 @@ export default function MoviesPage() {
 
   const location = useLocation();
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    navigate({ search: `?query=${query}` });
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const searchQuery = form.elements.query.value.trim();
+    if (searchQuery === "") {
+      return <p>000000</p>;
+    }
+    setParams({ query: searchQuery });
   };
 
   return (
     <div>
       <form onSubmit={handleSearch}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setParams({ query: e.target.value })}
-        />
+        <input type="text" name="query" defaultValue={query} />
         <button type="submit">Search</button>
       </form>
-      {movies.length > 0 ? <MovieList state={location} movies={movies} /> : ""}
+
+      {loading && <p>Loading...</p>}
+      {error && <p>{error}</p>}
+
+      {movies.length > 0 ? (
+        <MovieList state={location} movies={movies} />
+      ) : (
+        <p>No movies found. Try searching for something else!</p>
+      )}
     </div>
   );
 }
